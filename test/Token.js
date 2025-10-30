@@ -1,6 +1,6 @@
 const { loadFixture } = require("@nomicfoundation/hardhat-network-helpers")
 const { expect } = require("chai")
-const { ethers }= require("hardhat")
+const { ethers } = require("hardhat")
 
 const { deployTokenFixture, transferFromTokenFixture } = require("./helpers/TokenFixtures")
 

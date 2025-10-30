@@ -15,7 +15,7 @@ async function transferFromTokenFixture() {
 
     const AMOUNT = ethers.parseUnits("100", 18)
 
-    // we don;t need the transaction for the apprrove, so
+    // we don't need the transaction for the apprrove, so
     // we just wrap it in a await so we can still do .wait() 
     await (await token.connect (deployer).approve(exchange.address, AMOUNT)).wait()
 
