@@ -23,11 +23,12 @@ const tokens = (n) => {
 
     describe("Depositing Tokens", () => {
         const AMOUNT = tokens("100")
+
         describe("Success", () => {
             it("tracks the token deposit", async () => {
                 const { tokens: { token0 }, exchange, accounts } = await loadFixture(depositExchangeFixture)
                 expect(await token0.balanceOf(await exchange.getAddress())).to.equal(AMOUNT)
-                expect(await exchange.totalBalanceOf(await token0.getAddress(), accounts.user1.address))
+                expect(await exchange.totalBalanceOf(await token0.getAddress(), accounts.user1.address)).to.equal(AMOUNT)
             })
 
             it("emits a tokens deposited event", async () => {
@@ -49,5 +50,50 @@ const tokens = (n) => {
             })
         })
     })
+
+    describe("Withdrawing Tokens", () => {
+        const AMOUNT = tokens("100")
+
+        describe("Success", () => {
+            it("withdraws token funds", async () => {
+                const { tokens: { token0 }, exchange, accounts } = await loadFixture(depositExchangeFixture)
+
+                // Now withdraw Tokens
+                const transaction = await exchange.connect(accounts.user1).withdrawToken(await token0.getAddress(), AMOUNT)
+                await transaction.wait()
+
+                expect(await token0.balanceOf(await exchange.getAddress())).to.equal(0)
+                expect(await exchange.totalBalanceOf(await token0.getAddress(), accounts.user1.address)).to.equal(0)
+            })
+
+            it("emits a tokensWithdrawn event", async () => {
+                const { tokens: { token0 }, exchange, accounts } = await loadFixture(depositExchangeFixture)
+
+                const transaction = await exchange.connect(accounts.user1).withdrawToken(await token0.getAddress(), AMOUNT)
+                await transaction.wait()
+
+                await expect(transaction).to.emit(exchange, "TokensWithdrawn")
+                .withArgs(
+                    await token0.getAddress(),
+                    accounts.user1.address,
+                    AMOUNT,
+                    0
+                )
+            })
+        })
+        
+        describe("Failure", () => {
+            it("fails for insufficient balances", async () => {
+                const { tokens: { token0 }, exchange, accounts } = await loadFixture(deployExchangeFixture)
+                const ERROR = "Exchange: Insufficient balance"
+
+                await expect(exchange.connect(accounts.user1).withdrawToken(
+                    await token0.getAddress(),
+                    AMOUNT)
+                ).to.be.revertedWith(ERROR)
+            })
+        })
+    })
 })
 
+    
