@@ -11,6 +11,7 @@ contract Exchange {
 
     // Mappings
     mapping(uint256 => Order) public orders;
+    mapping(uint256 => bool) public isOrderCancelled;
 
     // Total tokens belonging to a user
     mapping(address => mapping(address => uint256))
@@ -42,7 +43,15 @@ contract Exchange {
         uint256 amountGive,
         uint256 timestamp
     );
-
+    event OrderCancelled(
+        uint256 id,
+        address user,
+        address tokenGet,
+        uint256 amountGet,
+        address tokenGive,
+        uint256 amountGive,
+        uint256 timestamp
+    );
 
     struct Order{
         // Attributes of an order
@@ -167,5 +176,34 @@ contract Exchange {
             block.timestamp
         );
     }
+
+    function cancelOrder(uint256 _id) public {
+        // fetch the order
+        Order storage order = orders[_id];
+
+        // Order must exist
+        require(order.id == _id, "Exchange: Order does not exist");
+
+        // Ensure the caller of the function is the owner of the order
+        require(address(order.user) == msg.sender, "Exchange: Not the order owner");
+
+        // Cancel the order
+        isOrderCancelled[_id] = true;
+
+        // Update the active balance
+        userActiveTokenBalance[order.tokenGive][order.user] -= order.amountGive;
+
+        // Emit an event
+        emit OrderCancelled(
+            order.id,
+            msg.sender,
+            order.tokenGet,
+            order.amountGet,
+            order.tokenGive,
+            order.amountGive,
+            block.timestamp
+        );
+    }
+
         
 }
