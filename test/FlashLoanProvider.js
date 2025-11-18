@@ -23,14 +23,36 @@ describe("FlashLoanProvider", () => {
     describe("Calling flashLoan from FlashLoanUser", () => {
         const AMOUNT = tokens(100)
 
-        it("Emits FlashLoan event", async () => {
-            const { tokens: { token0 }, exchange, accounts, flashLoanUser } = await loadFixture(flashLoanFixture)
+        describe("Success", () => {
+            it("emit a FlashLoanReceived event", async () => {
+                const { tokens: { token0 }, accounts, flashLoanUser } = await loadFixture(flashLoanFixture)
 
-            await expect(flashLoanUser.connect(accounts.user1).getFlashLoan(
-                await token0.getAddress(),
-                AMOUNT
-            )).to.emit(exchange, "FlashLoan")
+                await expect(flashLoanUser.connect(accounts.user1).getFlashLoan(
+                    await token0.getAddress(),
+                    AMOUNT,
+                )).to.emit(flashLoanUser, "FlashLoanReceived")
+            })
+
+            it("Emits FlashLoan event", async () => {
+                const { tokens: { token0 }, exchange, accounts, flashLoanUser } = await loadFixture(flashLoanFixture)
+
+                await expect(flashLoanUser.connect(accounts.user1).getFlashLoan(
+                    await token0.getAddress(),
+                    AMOUNT
+                )).to.emit(exchange, "FlashLoan")
+            })
         })
 
+        describe("Failure", () => {
+            it("Rejects on insufficient funds", async () => {
+                const { tokens: { token1 }, exchange, accounts } = await loadFixture(deployExchangeFixture)
+
+                await expect(exchange.connect(accounts.user1).flashLoan(
+                    await token1.getAddress(),
+                    tokens(100),
+                    "0x"
+                )).to.be.revertedWith("Token: Insufficient Funds")
+            })
+        })    
     })
 })
