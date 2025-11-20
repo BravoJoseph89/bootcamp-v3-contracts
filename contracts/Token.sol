@@ -63,7 +63,7 @@ contract Token {
             address _to,
             uint256 _value
         ) public returns(bool success) {
-            require(_value <= balanceOf [_from], "Token: Insufficient Funds");
+            require(_value <= balanceOf[_from], "Token: Insufficient Funds");
             require(
                 _value <= allowance[_from][msg.sender],
                 "Token: Insufficient allowances"
